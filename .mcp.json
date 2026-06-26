@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "unreal-engine": {
+      "command": "python",
+      "args": ["mcp_server/unreal_mcp_server.py"],
+      "env": {
+        "UE_BRIDGE_HOST": "127.0.0.1",
+        "UE_BRIDGE_PORT": "13377"
+      }
+    }
+  }
+}
