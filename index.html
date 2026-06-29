@@ -449,11 +449,11 @@
 </div>
 
 <!-- Tendina "cose da fare insieme" -->
-<button id="todoTab" aria-label="Cose da fare insieme">Da fare insieme <span class="tt-badge" id="todoBadge">0</span></button>
+<button id="todoTab" aria-label="Da fare">Da fare <span class="tt-badge" id="todoBadge">0</span></button>
 <div id="todoBackdrop"></div>
 <aside id="todoDrawer" aria-hidden="true">
   <div class="td-head">
-    <h3>Cose da fare insieme</h3>
+    <h3>Da fare</h3>
     <button class="td-close" id="todoClose" aria-label="Chiudi">×</button>
   </div>
   <div class="td-add">
@@ -944,7 +944,7 @@ function renderTodos(){
   const list=$("todoList");
   if(!list) return;
   if(!TODOS.length){
-    list.innerHTML='<div class="td-empty">Ancora niente qui.<br>Aggiungi la prima cosa da fare insieme.</div>';
+    list.innerHTML='<div class="td-empty">Ancora niente qui.<br>Aggiungi la prima cosa da fare.</div>';
     updateTodoBadge(); return;
   }
   // prima i non fatti, poi i fatti
