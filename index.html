@@ -733,6 +733,18 @@ function ensureMonth(year,month){
   if(!MONTHSDATA[key].events) MONTHSDATA[key].events={};
   return key;
 }
+// chiave "YYYY-MM" del mese corrente
+function currentMonthKey(){
+  const n=new Date();
+  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}`;
+}
+// elimina tutti i mesi antecedenti a quello corrente. Ritorna true se ha rimosso qualcosa.
+function prunePastMonths(){
+  const cur=currentMonthKey();
+  let removed=false;
+  Object.keys(MONTHSDATA).forEach(k=>{ if(k<cur){ delete MONTHSDATA[k]; removed=true; } });
+  return removed;
+}
 // impegni del giorno (1-based) -> array, sempre definito
 function eventsOf(md,day){
   if(!md.events) md.events={};
@@ -1024,7 +1036,7 @@ $("eSave").onclick=saveEvent;
 $("eDate").onchange=renderEList;
 $("evtModal").onclick=e=>{if(e.target.id==="evtModal")$("evtModal").classList.remove("show");};
 $("resetBtn").onclick=()=>{ if(!confirm("Azzerare tutti i dati per tutti? L'operazione è condivisa.")) return; MONTHSDATA={};TODOS=[];activeKey=null;renderMonths();renderCalendar();renderTodos();$("varBtn").disabled=true;setStatus("Tutto azzerato. Carica nuovi PDF.");cloudSave();};
-$("refreshBtn") && ($("refreshBtn").onclick=async()=>{ setCloudStatus("Aggiornamento…"); await cloudLoad(); renderMonths(); renderCalendar(); renderTodos(); setCloudStatus(CLOUD?"✓ Aggiornato":""); });
+$("refreshBtn") && ($("refreshBtn").onclick=async()=>{ setCloudStatus("Aggiornamento…"); await cloudLoad(); const hadPast=prunePastMonths(); if(!activeKey||!MONTHSDATA[activeKey]){ const n=new Date(); activeKey=ensureMonth(n.getFullYear(),n.getMonth()); } renderMonths(); renderCalendar(); renderTodos(); if(CLOUD&&hadPast) cloudSave(); setCloudStatus(CLOUD?"✓ Aggiornato":""); });
 
 /* ---------- modalità testo grande (salvata sul dispositivo) ---------- */
 function applyBig(on){
@@ -1095,16 +1107,23 @@ async function startApp(){
   if(CLOUD){
     setCloudStatus("Caricamento dati online…");
     await cloudLoad();
-    const keys=Object.keys(MONTHSDATA).sort();
-    if(keys.length){ activeKey=keys[keys.length-1]; $("varBtn").disabled=false; }
-    renderMonths(); renderCalendar(); renderTodos();
     setCloudStatus("✓ Connesso al database condiviso");
-    if(!keys.length) setStatus("Database vuoto. Carica i PDF dei turni per iniziare.");
-    else setStatus("Dati caricati dal database condiviso.");
   }else{
     setCloudStatus("⚠ Database non configurato — i dati restano solo su questo dispositivo");
   }
-  renderTodos();
+  // elimina i mesi passati e apri sempre sul mese corrente
+  const hadPast=prunePastMonths();
+  const now=new Date();
+  activeKey=ensureMonth(now.getFullYear(),now.getMonth());
+  $("varBtn").disabled=false;
+  renderMonths(); renderCalendar(); renderTodos();
+  const md=MONTHSDATA[activeKey];
+  const hasData=md&&md.days&&(md.days.davide||md.days.carlotta);
+  setStatus(hasData
+    ? "Dati caricati dal database condiviso."
+    : `Nessun turno per ${MONTHS_IT[now.getMonth()]} ${now.getFullYear()}. Carica il PDF del mese.`);
+  // se ho eliminato mesi vecchi, aggiorno il database condiviso
+  if(CLOUD&&hadPast) cloudSave();
 }
 
 /* ---------- lockscreen ---------- */
